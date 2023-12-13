@@ -53,11 +53,11 @@
           <h4 class="card-title"> Dashboard</h4>
         </div>
         <div class="card-body">
-          <div id="clockContainer">
+          {{-- <div id="clockContainer">
             <div id="hour"></div>
             <div id="minute"></div>
             <div id="second"></div>
-        </div>
+        </div> --}}
         </div>
       </div>
       {{-- <div class="col-12">
