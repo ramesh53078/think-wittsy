@@ -19,7 +19,7 @@ class LoginController extends Controller
             'email_or_phone' => 'required',
             'password' => 'required|string|min:6',
         ]);
-    
+
         if ($validator->fails()) {
             return response()->json([
                 'status' => 'error',
@@ -27,18 +27,43 @@ class LoginController extends Controller
                 'errors' => $validator->errors(),
             ], 422);
         }
-    
+
         $loginIdentifier = $request->input('email_or_phone');
         $password = $request->input('password');
         $field = filter_var($loginIdentifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
         $user = User::where($field, $loginIdentifier)->first();
+
         if (!$user || !Hash::check($password, $user->password)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'Invalid credentials.',
             ], 401);
         }
-        $token = JWTAuth::fromUser($user);
+
+        // Check the number of devices
+        $userDevicesCount = $user->devices()->count();
+
+        if ($userDevicesCount >= 3) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'You can only log in from up to three devices.',
+            ], 403);
+        }
+
+        // Create a new device entry
+        $device_id = $request->input('device_id');
+        $user->devices()->create(['device_id' => $device_id]);
+
+        // Generate a new token
+        try {
+            $token = JWTAuth::fromUser($user);
+        } catch (JWTException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to generate token.',
+            ], 500);
+        }
+
         return response()->json([
             'success' => true,
             'token' => $token,
