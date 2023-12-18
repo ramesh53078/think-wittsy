@@ -9,10 +9,16 @@ use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use App\User;
+use App\UserDevice;
 use Illuminate\Support\Facades\Hash;
 class LoginController extends Controller
 {
 
+    private $device;
+    public function __construct()
+    {
+        $this->device = new UserDevice();
+    }
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -51,8 +57,14 @@ class LoginController extends Controller
         }
 
         // Create a new device entry
+        
         $device_id = $request->input('device_id');
-        $user->devices()->create(['device_id' => $device_id]);
+        $exist_device = $this->device->where('device_id', $device_id)->where('user_id', $user->id)->first();
+
+        if($exist_device) {
+            $exist_device = $this->device->where('device_id', $device_id)->where('user_id', $user->id)->delete();
+        }
+        $user->devices()->create(['device_id' => $device_id,'device_name' => $request->input('device_name')]);
 
         // Generate a new token
         try {
