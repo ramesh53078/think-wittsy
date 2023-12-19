@@ -25,6 +25,7 @@ Route::post('otp-login','Api\LoginController@otpLogin');
 Route::post('/verify-otp','Api\LoginController@verifyOTP');
 
 Route::group(['middleware' => ['jwt.verify']], function() {
+    Route::post('logout','Api\ProfileController@logout');
     Route::post('update-profile','Api\ProfileController@updateProfile');    
     Route::post('/feedback','Api\FeedbackController@Feedback');
     Route::get('user/devices','Api\ProfileController@userDevices');

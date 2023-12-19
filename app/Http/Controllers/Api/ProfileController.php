@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use JWTAuth;
 use App\UserDevice;
+use Auth;
 use Illuminate\Support\Facades\Validator;
 class ProfileController extends Controller
 {
@@ -14,6 +15,33 @@ class ProfileController extends Controller
     {
         $this->device = new UserDevice();
     }
+
+    public function logout(Request $request)
+{
+    try {
+        // Invalidate the current token
+        $user = JWTAuth::authenticate($request->token);
+
+        JWTAuth::parseToken()->invalidate();
+
+        // Logout the user
+        Auth::logout();
+
+        $device_id = $request->input('device_id');
+
+        $user->devices()->where('device_id', $device_id)->delete();
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Logout successful.',
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Failed to logout.',
+        ], 500);
+    }
+}
     public function updateProfile(Request $request)
     {
         $user = JWTAuth::authenticate($request->token);
