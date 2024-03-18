@@ -11,6 +11,7 @@ use Tymon\JWTAuth\Exceptions\JWTException;
 use App\User;
 use App\UserDevice;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 class LoginController extends Controller
 {
 
@@ -102,15 +103,25 @@ class LoginController extends Controller
         // Generate and store an OTP (you need to implement this part)
         $otp = $this->generateAndStoreOTP($mobileNumber);
 
-        // Send OTP to the user (you need to implement this part)
+        $response = $this->sendOTPUsing2FactorIn($mobileNumber, $otp);
 
-        // Return success response indicating OTP has been sent
-        return response()->json([
-            'success' => true,
-            'message' => 'OTP sent successfully.',
-            'mobile_number' => $mobileNumber,
-            'otp' => $otp
-        ]);
+        $responseArray = json_decode($response, true);
+
+        if ($responseArray['Status'] === 'Success') {
+            // Return success response indicating OTP has been sent
+            return response()->json([
+                'success' => true,
+                'message' => 'OTP sent successfully.',
+                'mobile_number' => $mobileNumber,
+                // 'otp' => $otp
+            ]);
+        } else {
+            // Handle error response from the API
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to send OTP. Please try again later.',
+            ], 500);
+        }
     }
     
 
@@ -124,6 +135,40 @@ class LoginController extends Controller
         $otp = mt_rand(100000, 999999);
         User::where('phone', $mobileNumber)->update(['otp' => Hash::make($otp)]);
         return $otp;
+    }
+
+    private function sendOTPUsing2FactorIn($mobileNumber, $otp)
+    {
+        // Make an HTTP request to 2Factor.in API to send OTP
+        $apiKey = '98936d9e-61af-11ee-addf-0200cd936042';
+        $url = "https://2factor.in/API/V1/$apiKey/SMS/$mobileNumber/$otp/Think Wittsy";
+
+
+            // Initialize cURL session
+        $ch = curl_init();
+
+        // Set cURL options
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        // Execute cURL session
+        $response = curl_exec($ch);
+
+        // Check for errors
+        if(curl_errno($ch)){
+            $error_message = curl_error($ch);
+            // Handle cURL error
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to send OTP: ' . $error_message,
+            ], 500);
+        }
+
+        // Close cURL session
+        curl_close($ch);
+
+        // Return the response
+        return $response;
     }
 
     public function verifyOTP(Request $request)

@@ -36,7 +36,7 @@
   
 </head>
 @php $data = App\Admin\UnitSetting::first(); @endphp
-<body class="{{$data->panel_background}}">
+<body class="{{@$data->panel_background}}">
   <div class="wrapper">
     @include('admin.layouts.sidebar')
     <div class="main-panel">
