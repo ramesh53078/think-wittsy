@@ -13,10 +13,10 @@ class RegisterController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|regex:/^[a-zA-Z ]+$/',
-            'email' => 'required|unique:users,email',
+            // 'email' => 'required|unique:users,email',
             'mobile_number' => 'required|string|unique:users,phone',
-            'password' => 'min:8|required_with:confirm_password|same:confirm_password',
-            'confirm_password' => 'required|min:8',
+            // 'password' => 'min:8|required_with:confirm_password|same:confirm_password',
+            // 'confirm_password' => 'required|min:8',
         ]);
 
         if ($validator->fails()) {
@@ -25,8 +25,8 @@ class RegisterController extends Controller
         $password = $request->input('password');
         $user = User::create([
             'name' => $request->input('name'),
-            'email' => $request->input('email'),
-            'password' => bcrypt($password),
+            // 'email' => $request->input('email'),
+            // 'password' => bcrypt($password),
             'phone' => $request->input('mobile_number'),
         ]);
 
